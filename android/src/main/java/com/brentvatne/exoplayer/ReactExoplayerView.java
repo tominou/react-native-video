@@ -33,28 +33,30 @@ import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.SeekParameters;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
+// import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer;
 import com.google.android.exoplayer2.mediacodec.MediaCodecUtil;
 import com.google.android.exoplayer2.metadata.Metadata;
 import com.google.android.exoplayer2.metadata.MetadataRenderer;
 import com.google.android.exoplayer2.source.BehindLiveWindowException;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
+// import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.MergingMediaSource;
+import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.source.SingleSampleMediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.source.TrackGroup;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
 import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
-import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource;
+// import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource;
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.FixedTrackSelection;
+// import com.google.android.exoplayer2.trackselection.FixedTrackSelection;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
@@ -62,7 +64,8 @@ import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultAllocator;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer2.util.MimeTypes;
+import com.google.android.exoplayer2.upstream.DefaultLoadErrorHandlingPolicy;
+// import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
 import com.google.android.exoplayer2.ui.PlayerControlView;
 
@@ -100,7 +103,7 @@ class ReactExoplayerView extends FrameLayout implements
     private PlayerControlView playerControlView;
     private View playPauseControlContainer;
     private Player.EventListener eventListener;
-    
+
     private Handler mainHandler;
     private ExoPlayerView exoPlayerView;
 
@@ -116,6 +119,7 @@ class ReactExoplayerView extends FrameLayout implements
     private boolean isInBackground;
     private boolean isPaused;
     private boolean isBuffering;
+    private boolean muted = false;
     private float rate = 1f;
     private float audioVolume = 1f;
     private int minLoadRetryCount = 3;
@@ -134,7 +138,7 @@ class ReactExoplayerView extends FrameLayout implements
     private String audioTrackType;
     private Dynamic audioTrackValue;
     private String videoTrackType;
-    private Dynamic videoTrackValue;    
+    private Dynamic videoTrackValue;
     private ReadableArray audioTracks;
     private String textTrackType;
     private Dynamic textTrackValue;
@@ -179,7 +183,7 @@ class ReactExoplayerView extends FrameLayout implements
         this.eventEmitter = new VideoEventEmitter(context);
 
         createViews();
-        
+
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         themedReactContext.addLifecycleEventListener(this);
         audioBecomingNoisyReceiver = new AudioBecomingNoisyReceiver(themedReactContext);
@@ -265,7 +269,7 @@ class ReactExoplayerView extends FrameLayout implements
     // Internal methods
 
     /**
-     * Toggling the visibility of the player control view 
+     * Toggling the visibility of the player control view
      */
     private void togglePlayerControlVisibility() {
         if(player == null) return;
@@ -356,6 +360,7 @@ class ReactExoplayerView extends FrameLayout implements
                     player = ExoPlayerFactory.newSimpleInstance(getContext(), trackSelector, defaultLoadControl);
                     player.addListener(self);
                     player.setMetadataOutput(self);
+                    player.setSeekParameters(SeekParameters.EXACT);
                     exoPlayerView.setPlayer(player);
                     audioBecomingNoisyReceiver.setListener(self);
                     BANDWIDTH_METER.addEventListener(new Handler(), self);
@@ -403,21 +408,19 @@ class ReactExoplayerView extends FrameLayout implements
                 : uri.getLastPathSegment());
         switch (type) {
             case C.TYPE_SS:
-                return new SsMediaSource(uri, buildDataSourceFactory(false),
-                        new DefaultSsChunkSource.Factory(mediaDataSourceFactory), 
-                        minLoadRetryCount, SsMediaSource.DEFAULT_LIVE_PRESENTATION_DELAY_MS, 
-                        mainHandler, null);
+                return new SsMediaSource.Factory(mediaDataSourceFactory)
+                        .setLoadErrorHandlingPolicy(new DefaultLoadErrorHandlingPolicy(minLoadRetryCount))
+                        .createMediaSource(uri);
             case C.TYPE_DASH:
-                return new DashMediaSource(uri, buildDataSourceFactory(false),
-                        new DefaultDashChunkSource.Factory(mediaDataSourceFactory), 
-                        minLoadRetryCount, DashMediaSource.DEFAULT_LIVE_PRESENTATION_DELAY_MS,
-                        mainHandler, null);
+                return new DashMediaSource.Factory(mediaDataSourceFactory)
+                        .setLoadErrorHandlingPolicy(new DefaultLoadErrorHandlingPolicy(minLoadRetryCount))
+                        .createMediaSource(uri);
             case C.TYPE_HLS:
-                return new HlsMediaSource(uri, mediaDataSourceFactory, 
-                        minLoadRetryCount, mainHandler, null);
+                return new HlsMediaSource.Factory(mediaDataSourceFactory)
+                        .createMediaSource(uri);
             case C.TYPE_OTHER:
-                return new ExtractorMediaSource(uri, mediaDataSourceFactory, new DefaultExtractorsFactory(),
-                        mainHandler, null);
+                return new ProgressiveMediaSource.Factory(mediaDataSourceFactory)
+                        .createMediaSource(uri);
             default: {
                 throw new IllegalStateException("Unsupported type: " + type);
             }
@@ -573,7 +576,7 @@ class ReactExoplayerView extends FrameLayout implements
                 break;
         }
 
-        if (player != null) {
+        if (player != null && !muted) {
             if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
                 // Lower the volume
                 player.setVolume(audioVolume * 0.8f);
@@ -879,7 +882,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setReportBandwidth(boolean reportBandwidth) {
         mReportBandwidth = reportBandwidth;
-    }   
+    }
 
     public void setRawSrc(final Uri uri, final String extension) {
         if (uri != null) {
@@ -912,6 +915,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     private void applyModifiers() {
         setRepeatModifier(repeat);
+        setMutedModifier(muted);
     }
 
     public void setRepeatModifier(boolean repeat) {
@@ -1004,7 +1008,7 @@ class ReactExoplayerView extends FrameLayout implements
             for (int j = 0; j < group.length; j++) {
                 tracks[j] = j;
             }
-        } 
+        }
 
         if (groupIndex == C.INDEX_UNSET) {
             trackSelector.setParameters(disableParameters);
@@ -1069,6 +1073,7 @@ class ReactExoplayerView extends FrameLayout implements
     }
 
     public void setMutedModifier(boolean muted) {
+        this.muted = muted;
         audioVolume = muted ? 0.f : 1.f;
         if (player != null) {
             player.setVolume(audioVolume);
@@ -1173,7 +1178,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     /**
      * Handling controls prop
-     * 
+     *
      * @param controls  Controls prop, if true enable controls, if false disable them
      */
     public void setControls(boolean controls) {
