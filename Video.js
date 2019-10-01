@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {StyleSheet, requireNativeComponent, NativeModules, View, ViewPropTypes, Image, Platform, findNodeHandle} from 'react-native';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
@@ -14,7 +14,7 @@ const styles = StyleSheet.create({
 
 export { TextTrackType, FilterType };
 
-export default class Video extends PureComponent {
+export default class Video extends Component {
 
   constructor(props) {
     super(props);
@@ -27,17 +27,17 @@ export default class Video extends PureComponent {
   setNativeProps(nativeProps) {
     this._root.setNativeProps(nativeProps);
   }
-
+  
   toTypeString(x) {
     switch (typeof x) {
       case "object":
-        return x instanceof Date
-          ? x.toISOString()
+        return x instanceof Date 
+          ? x.toISOString() 
           : JSON.stringify(x); // object, null
       case "undefined":
         return "";
       default: // boolean, number, string
-        return x.toString();
+        return x.toString();      
     }
   }
 
@@ -53,7 +53,7 @@ export default class Video extends PureComponent {
 
   seek = (time, tolerance = 100) => {
     if (isNaN(time)) throw new Error('Specified time is not a number');
-
+    
     if (Platform.OS === 'ios') {
       this.setNativeProps({
         seek: {
@@ -124,7 +124,7 @@ export default class Video extends PureComponent {
     if (this.props.onBandwidthUpdate) {
       this.props.onBandwidthUpdate(event.nativeEvent);
     }
-  };
+  };  
 
   _onSeek = (event) => {
     if (this.props.onSeek) {
@@ -192,7 +192,7 @@ export default class Video extends PureComponent {
       this.props.onPlaybackRateChange(event.nativeEvent);
     }
   };
-
+  
   _onExternalPlaybackChange = (event) => {
     if (this.props.onExternalPlaybackChange) {
       this.props.onExternalPlaybackChange(event.nativeEvent);
@@ -245,7 +245,7 @@ export default class Video extends PureComponent {
     if (uri && uri.match(/^\//)) {
       uri = `file://${uri}`;
     }
-
+    
     if (!uri) {
       console.warn('Trying to load empty source.');
     }
@@ -382,6 +382,7 @@ Video.propTypes = {
   poster: PropTypes.string,
   posterResizeMode: Image.propTypes.resizeMode,
   repeat: PropTypes.bool,
+  automaticallyWaitsToMinimizeStalling: PropTypes.bool,
   allowsExternalPlayback: PropTypes.bool,
   selectedAudioTrack: PropTypes.shape({
     type: PropTypes.string.isRequired,
@@ -396,7 +397,7 @@ Video.propTypes = {
       PropTypes.string,
       PropTypes.number
     ])
-  }),
+  }),  
   selectedTextTrack: PropTypes.shape({
     type: PropTypes.string.isRequired,
     value: PropTypes.oneOfType([
