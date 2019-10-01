@@ -33,6 +33,7 @@ import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.SeekParameters;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer;
@@ -360,6 +361,7 @@ class ReactExoplayerView extends FrameLayout implements
                             trackSelector, defaultLoadControl, null, bandwidthMeter);
                     player.addListener(self);
                     player.addMetadataOutput(self);
+                    player.setSeekParameters(SeekParameters.EXACT);
                     exoPlayerView.setPlayer(player);
                     audioBecomingNoisyReceiver.setListener(self);
                     bandwidthMeter.addEventListener(new Handler(), self);
