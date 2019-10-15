@@ -497,7 +497,7 @@ class ReactExoplayerView extends FrameLayout implements
         }
 
         if (playWhenReady) {
-            // boolean hasAudioFocus = requestAudioFocus();
+            boolean hasAudioFocus = requestAudioFocus();
             // if (hasAudioFocus) {
                 player.setPlayWhenReady(true);
             // }
