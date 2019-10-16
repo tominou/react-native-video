@@ -226,6 +226,7 @@ class ReactExoplayerView extends FrameLayout implements
     @Override
     public void onHostResume() {
         if (!playInBackground || !isInBackground) {
+            Log.d(TAG, "onHostResume");
             setPlayWhenReady(!isPaused);
         }
         isInBackground = false;
@@ -237,6 +238,7 @@ class ReactExoplayerView extends FrameLayout implements
         if (playInBackground) {
             return;
         }
+        Log.d(TAG, "onHostPause");
         setPlayWhenReady(false);
     }
 
@@ -365,6 +367,7 @@ class ReactExoplayerView extends FrameLayout implements
                     exoPlayerView.setPlayer(player);
                     audioBecomingNoisyReceiver.setListener(self);
                     bandwidthMeter.addEventListener(new Handler(), self);
+                    Log.d(TAG, "initializePlayer");
                     setPlayWhenReady(!isPaused);
                     playerNeedsSource = true;
 
@@ -492,14 +495,14 @@ class ReactExoplayerView extends FrameLayout implements
     }
 
     private void setPlayWhenReady(boolean playWhenReady) {
-        Log.d(TAG, "setPlayWhenReady" + playWhenReady);
+        Log.d(TAG, "setPlayWhenReady=" + playWhenReady);
         if (player == null) {
             return;
         }
 
         if (playWhenReady) {
             boolean hasAudioFocus = requestAudioFocus();
-            Log.d(TAG, "hasAudioFocus" + hasAudioFocus);
+            Log.d(TAG, "hasAudioFocus=" + hasAudioFocus);
             if (hasAudioFocus) {
                 player.setPlayWhenReady(true);
             }
@@ -536,6 +539,7 @@ class ReactExoplayerView extends FrameLayout implements
     private void pausePlayback() {
         if (player != null) {
             if (player.getPlayWhenReady()) {
+                Log.d(TAG, "pausePlayback");
                 setPlayWhenReady(false);
             }
         }
@@ -681,7 +685,7 @@ class ReactExoplayerView extends FrameLayout implements
             Format videoFormat = player.getVideoFormat();
             int width = videoFormat != null ? videoFormat.width : 0;
             int height = videoFormat != null ? videoFormat.height : 0;
-            player.setPlayWhenReady(true); // REMOVE IF DOESNT FIXES ISSUE
+            // player.setPlayWhenReady(true); // REMOVE IF DOESNT FIXES ISSUE
             eventEmitter.load(player.getDuration(), player.getCurrentPosition(), width, height,
                     getAudioTrackInfo(), getTextTrackInfo(), getVideoTrackInfo());
         }
