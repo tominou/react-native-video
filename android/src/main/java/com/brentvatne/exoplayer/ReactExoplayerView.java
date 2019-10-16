@@ -492,15 +492,17 @@ class ReactExoplayerView extends FrameLayout implements
     }
 
     private void setPlayWhenReady(boolean playWhenReady) {
+        Log.d(TAG, "setPlayWhenReady" + playWhenReady);
         if (player == null) {
             return;
         }
 
         if (playWhenReady) {
             boolean hasAudioFocus = requestAudioFocus();
-            // if (hasAudioFocus) {
+            Log.d(TAG, "hasAudioFocus" + hasAudioFocus);
+            if (hasAudioFocus) {
                 player.setPlayWhenReady(true);
-            // }
+            }
         } else {
             player.setPlayWhenReady(false);
         }
@@ -679,6 +681,7 @@ class ReactExoplayerView extends FrameLayout implements
             Format videoFormat = player.getVideoFormat();
             int width = videoFormat != null ? videoFormat.width : 0;
             int height = videoFormat != null ? videoFormat.height : 0;
+            player.setPlayWhenReady(true); // REMOVE IF DOESNT FIXES ISSUE
             eventEmitter.load(player.getDuration(), player.getCurrentPosition(), width, height,
                     getAudioTrackInfo(), getTextTrackInfo(), getVideoTrackInfo());
         }
