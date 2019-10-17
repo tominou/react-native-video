@@ -303,6 +303,10 @@ class ReactExoplayerView extends FrameLayout implements
                 //Remove this eventListener once its executed. since UI will work fine once after the reLayout is done
                 player.removeListener(eventListener);
             }
+            @Override
+            public void onLoadingChanged(boolean isLoading) {
+                Log.d(TAG, "onLoadingChanged loading=" + isLoading);
+            }
         };
         player.addListener(eventListener);
     }
