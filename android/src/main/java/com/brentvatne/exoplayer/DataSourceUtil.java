@@ -63,12 +63,8 @@ public class DataSourceUtil {
     }
 
     private static DataSource.Factory buildDataSourceFactory(ReactContext context, DefaultBandwidthMeter bandwidthMeter, Map<String, String> requestHeaders) {
-        DefaultExtractorsFactory extractorsFactory = new DefaultDataSourceFactory(context, bandwidthMeter,
-              buildHttpDataSourceFactory(context, bandwidthMeter, requestHeaders));
-        extractorsFactory.setTsExtractorFlags(DefaultTsPayloadReaderFactory.FLAG_ALLOW_NON_IDR_KEYFRAMES);
-
-
-        return extractorsFactory;
+        return new DefaultDataSourceFactory(context, bandwidthMeter,
+                buildHttpDataSourceFactory(context, bandwidthMeter, requestHeaders));
     }
 
     private static HttpDataSource.Factory buildHttpDataSourceFactory(ReactContext context, DefaultBandwidthMeter bandwidthMeter, Map<String, String> requestHeaders) {
