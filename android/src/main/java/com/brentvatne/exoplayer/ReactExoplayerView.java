@@ -381,7 +381,12 @@ class ReactExoplayerView extends FrameLayout implements
                     HttpProxyCacheServer proxyFactory = ProxyFactory.getProxy(getContext());
 
                     ArrayList<MediaSource> mediaSourceList = buildTextSources();
-                    MediaSource videoSource = buildMediaSource(Uri.parse(proxyFactory.getProxyUrl(srcUri.toString())), extension);
+
+                    String proxyUrl = proxyFactory.getProxyUrl(srcUri.toString());
+                    Log.i(TAG, "uri " + srcUri.toString());
+                    Log.i(TAG, "proxy uri " + proxyUrl);
+
+                    MediaSource videoSource = buildMediaSource(Uri.parse(proxyUrl), extension);
                     MediaSource mediaSource;
                     if (mediaSourceList.size() == 0) {
                         mediaSource = videoSource;
