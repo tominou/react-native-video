@@ -382,11 +382,14 @@ class ReactExoplayerView extends FrameLayout implements
 
                     ArrayList<MediaSource> mediaSourceList = buildTextSources();
 
-                    String proxyUrl = proxyFactory.getProxyUrl(srcUri.toString());
-                    Log.i(TAG, "uri " + srcUri.toString());
-                    Log.i(TAG, "proxy uri " + proxyUrl);
+                    String strUri = srcUri.toString();
+                    Log.i(TAG, "uri " + strUri);
+                    if (strUri.startsWith("https://")) {
+                        strUri = proxyFactory.getProxyUrl(strUri);
+                    }
+                    Log.i(TAG, "proxy uri " + strUri);
 
-                    MediaSource videoSource = buildMediaSource(Uri.parse(proxyUrl), extension);
+                    MediaSource videoSource = buildMediaSource(Uri.parse(strUri), extension);
                     MediaSource mediaSource;
                     if (mediaSourceList.size() == 0) {
                         mediaSource = videoSource;
