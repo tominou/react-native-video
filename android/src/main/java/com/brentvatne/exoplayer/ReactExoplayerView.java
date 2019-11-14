@@ -14,6 +14,8 @@ import android.view.Window;
 import android.view.accessibility.CaptioningManager;
 import android.widget.FrameLayout;
 
+import com.brentvatne.caching.ProxyFactory;
+import com.danikula.videocache.HttpProxyCacheServer;
 import com.brentvatne.react.R;
 import com.brentvatne.receiver.AudioBecomingNoisyReceiver;
 import com.brentvatne.receiver.BecomingNoisyListener;
@@ -303,10 +305,6 @@ class ReactExoplayerView extends FrameLayout implements
                 //Remove this eventListener once its executed. since UI will work fine once after the reLayout is done
                 player.removeListener(eventListener);
             }
-            @Override
-            public void onLoadingChanged(boolean isLoading) {
-                Log.d(TAG, "onLoadingChanged loading=" + isLoading);
-            }
         };
         player.addListener(eventListener);
     }
@@ -343,9 +341,9 @@ class ReactExoplayerView extends FrameLayout implements
     private void initializePlayer() {
         ReactExoplayerView self = this;
         // This ensures all props have been settled, to avoid async racing conditions.
-        new Handler().postDelayed(new Runnable() {
+        /*new Handler().postDelayed(new Runnable() {
             @Override
-            public void run() {
+            public void run() {*/
                 if (player == null) {
                     TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory();
                     trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
@@ -379,8 +377,11 @@ class ReactExoplayerView extends FrameLayout implements
                     player.setPlaybackParameters(params);
                 }
                 if (playerNeedsSource && srcUri != null) {
+
+                    HttpProxyCacheServer proxyFactory = ProxyFactory.getProxy(getContext());
+
                     ArrayList<MediaSource> mediaSourceList = buildTextSources();
-                    MediaSource videoSource = buildMediaSource(srcUri, extension);
+                    MediaSource videoSource = buildMediaSource(Uri.parse(proxyFactory.getProxyUrl(srcUri.toString())), extension);
                     MediaSource mediaSource;
                     if (mediaSourceList.size() == 0) {
                         mediaSource = videoSource;
@@ -407,8 +408,8 @@ class ReactExoplayerView extends FrameLayout implements
                 initializePlayerControl();
                 setControls(controls);
                 applyModifiers();
-            }
-        }, 1);
+       //     }
+        //}, 1);
     }
 
     private MediaSource buildMediaSource(Uri uri, String overrideExtension) {
@@ -903,6 +904,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setSrc(final Uri uri, final String extension, Map<String, String> headers) {
         if (uri != null) {
+
             boolean isOriginalSourceNull = srcUri == null;
             boolean isSourceEqual = uri.equals(srcUri);
 
